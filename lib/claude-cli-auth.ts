@@ -109,6 +109,22 @@ export function getCliOAuthToken(): string | null {
 }
 
 /**
+ * Creates an Anthropic client using the ANTHROPIC_CLI_KEY env var as an OAuth Bearer token.
+ * Use this in Docker/Linux where the macOS keychain is unavailable but you have a CLI OAuth token.
+ * Returns null if ANTHROPIC_CLI_KEY is not set.
+ */
+export function createEnvCliAnthropicClient(baseURL?: string): Anthropic | null {
+  const token = process.env.ANTHROPIC_CLI_KEY?.trim()
+  if (!token) return null
+
+  return new Anthropic({
+    authToken: token,
+    defaultHeaders: { 'anthropic-beta': 'oauth-2025-04-20' },
+    ...(baseURL ? { baseURL } : {}),
+  })
+}
+
+/**
  * Creates an Anthropic client using the logged-in Claude CLI session.
  * Uses the OAuth Bearer token flow with the required anthropic-beta header.
  * Returns null if CLI auth is not available.
@@ -150,9 +166,10 @@ export function getCliAuthStatus(): {
  * Resolves an Anthropic client using the first available auth method:
  * 1. Override key (explicit key from request)
  * 2. DB-saved API key (pass pre-fetched to avoid async)
- * 3. Logged-in Claude CLI session (OAuth Bearer)
- * 4. ANTHROPIC_API_KEY env var
- * 5. Local proxy via ANTHROPIC_BASE_URL
+ * 3. Logged-in Claude CLI session (OAuth Bearer via keychain)
+ * 4. ANTHROPIC_CLI_KEY env var (OAuth token for Docker/Linux)
+ * 5. ANTHROPIC_API_KEY env var
+ * 6. Local proxy via ANTHROPIC_BASE_URL
  *
  * CLI auth is checked before env var so .env placeholders don't block CLI users.
  *
@@ -178,17 +195,21 @@ export function resolveAnthropicClient(options: {
     return new Anthropic({ apiKey: options.dbKey.trim(), ...(baseURL ? { baseURL } : {}) })
   }
 
-  // 3. CLI auth (before env var to avoid .env placeholder blocking)
+  // 3. CLI auth via keychain (before env var to avoid .env placeholder blocking)
   const cliClient = createCliAnthropicClient(baseURL)
   if (cliClient) return cliClient
 
-  // 4. Environment variable
+  // 4. ANTHROPIC_CLI_KEY env var (Docker/Linux: CLI OAuth token passed via env)
+  const envCliClient = createEnvCliAnthropicClient(baseURL)
+  if (envCliClient) return envCliClient
+
+  // 5. ANTHROPIC_API_KEY environment variable
   const envKey = process.env.ANTHROPIC_API_KEY?.trim()
   if (envKey) {
     return new Anthropic({ apiKey: envKey, ...(baseURL ? { baseURL } : {}) })
   }
 
-  // 5. Local proxy (assumes proxy handles auth)
+  // 6. Local proxy (assumes proxy handles auth)
   if (baseURL) {
     return new Anthropic({ apiKey: 'proxy', baseURL })
   }
