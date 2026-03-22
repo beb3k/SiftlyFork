@@ -26,7 +26,7 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='light')document.documentElement.classList.add('light');}catch(e){}})()` }} />
       </head>
-      <body className="flex min-h-screen bg-zinc-950 text-zinc-100 antialiased">
+      <body suppressHydrationWarning className="flex min-h-screen bg-zinc-950 text-zinc-100 antialiased">
         <Nav />
         <main className="flex-1 min-w-0 overflow-auto">
           {children}
@@ -36,3 +36,4 @@ export default function RootLayout({
     </html>
   )
 }
+

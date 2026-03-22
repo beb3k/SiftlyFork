@@ -120,10 +120,7 @@ export default function Nav() {
   const [categories, setCategories] = useState<CategoryItem[]>([])
   const [totalBookmarks, setTotalBookmarks] = useState<number | null>(null)
   const [showAllCats, setShowAllCats] = useState(false)
-  const [collectionsOpen, setCollectionsOpen] = useState(() => {
-    if (typeof window === 'undefined') return true
-    return localStorage.getItem('nav-collections-open') !== 'false'
-  })
+  const [collectionsOpen, setCollectionsOpen] = useState(true)
   const [pipeline, setPipeline] = useState<PipelineStatus | null>(null)
 
   function toggleCollections() {
@@ -148,6 +145,11 @@ export default function Nav() {
   }, [])
 
   useEffect(() => {
+    const storedCollectionsOpen = localStorage.getItem('nav-collections-open')
+    if (storedCollectionsOpen === 'false') {
+      setCollectionsOpen(false)
+    }
+
     // Fetch stats
     fetch('/api/stats')
       .then((r) => r.json())
@@ -324,3 +326,4 @@ export default function Nav() {
     </aside>
   )
 }
+

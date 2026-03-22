@@ -1,4 +1,4 @@
-import { execSync, spawnSync } from 'child_process'
+import { execSync } from 'child_process'
 import { readFileSync } from 'fs'
 import { join } from 'path'
 import { homedir } from 'os'
@@ -102,7 +102,7 @@ export function getCliOAuthToken(): string | null {
   const creds = readCliCredentials()
   if (!creds) return null
 
-  // Token expired — user needs to run `claude` to refresh
+  // Token expired - user needs to run `claude` to refresh
   if (Date.now() > creds.expiresAt) return null
 
   return creds.accessToken

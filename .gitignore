@@ -53,6 +53,10 @@ dev.db
 dev.db-journal
 *.db
 *.db-journal
+prisma/dev.db-shm
+prisma/dev.db-wal
+*.db-shm
+*.db-wal
 
 # OS
 .DS_Store
@@ -60,7 +64,6 @@ Thumbs.db
 
 # Promo video tool (local only)
 promo-video/
-
 # Claude Code local settings
 .claude/
 
